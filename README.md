@@ -1,111 +1,27 @@
-# **Course Title**<br/>by **Course Author**
+# Scalable Data Processing in R
 
-Specs deadline: YYYY-MM-DD
+* Course admin page: https://www.datacamp.com/teach/repositories/721
+* Course dev documentation: https://www.datacamp.com/create/how
+* Technical documentation: https://www.datacamp.com/teach/documentation
 
-*Please read the [course design process description](http://authoring.datacamp.com/courses/design/)
-and complete these steps in the `README.md` file in your course repository.
-If you need assistance,
-please speak with your Curriculum Lead.*
+## Description
 
-## Course development resources
+Datasets are often larger than available RAM but small enough to fit on the disk of a single machine. R users are often challenged by this situation since, by default, variables are stored in memory. This course introduces tools for processing, exploring, and analyzing data directly from disk.  You'll
+make use of R's scalable computing libraries to create analyses of 
+the Federal Housing Finance Agency's data, which includes  
+10's of millions of individuals. In the process, you'll learn 
+how to extract useful information from data sets that are bigger than RAM using the `bigmemory` and `iotools` packages and how to write analyses that run in parallel using the `foreach` package.
 
-* Course admin page: https://www.datacamp.com/teach/
-* Authoring documentation: https://authoring.datacamp.com/
 
-## Step 1: Brainstorming
+## Learning objectives
 
-1. What problem(s) will students learn how to solve?
-2. What techniques or concepts will students learn?
-3. What technologies, packages, or functions will students use?
-4. What terms or jargon will you define?
-5. What analogies or heuristics will you use?
-6. What mistakes or misconceptions do you expect?
-7. What datasets will you use?
+* Learn principles of scalable data exploration and analysis.
+* Learn how to work with matrices larger than RAM using the `bigmemory` package.
+* Understand how to process more general large objects in chunks using `iotools`.
+* Discover easy parallelization techniques using the `foreach` package.
 
-## Step 2: Who Is This Course for?
+## Prerequisites
 
-Link to [learner personas](https://authoring.datacamp.com/courses/design/personas.html)
-
-* Student 1: discussion.
-* Student 2: discussion.
-* Student 3: discussion.
-
-## Step 3: What Will Learners Do Along the Way?
-
-Write full descriptions of a couple of significant exercises to show how far learners are likely to get.
-
-### Title of Exercise
-
-Describe the exercise here, including the learning objectives, concepts taught, and any other important details.
-
-**Solution**
-
-```
-Include the code that you expect the students to write by the end of the course.
-It should typically be 2 or 3 lines.
-```
-
-### Other Exercises
-
-Write brief descriptions of 10 to 15 more exercises throughout the course.
-After this step you should have a clear idea of the flow of the course.
-
-#### Exercise title 1
-
-- Describe the exercise.
-- Mention the learning objectives.
-- Two or three bullets points is enough.
-
-**Solution**
-
-```
-Solution code here.
-It should typically be 2 or 3 lines.
-```
-
-#### Exercise title 2
-
-- Describe the exercise.
-- …
-
-**Solution**
-
-```
-Solution code here.
-```
-
-## Step 4: How Are the Concepts Connected?
-
-*Remind yourself about [course terminology](https://authoring.datacamp.com/courses/design#terminology-and-structure), then describe the flow of the course.*
-
-- Chapter 1
-  - Lesson 1.1
-  - Lesson 1.2
-  - Lesson 1.3
-- Chapter 2
-  - Lesson 2.1
-  - Lesson 2.2
-  - Lesson 2.3
-
-The datasets are:
-
-- `datasets/dataset-1`: data set 1
-- `datasets/dataset-2`: data set 2
-
-## Step 5: Course Overview
-
-**Course Description**
-
-One-paragraph description of the course.
-
-**Learning Objectives**
-
-- Objective 1
-- Objective 2
-- Objective 3
-
-**Prerequisites**
-
-- [Intro to Python for Data Science](https://www.datacamp.com/courses/intro-to-python-for-data-science)
-- [Intermediate Python for Data Science](https://www.datacamp.com/courses/intermediate-python-for-data-science)
-- Other prerequisite courses
+* Introduction to R
+* Intermediate R
+* Efficient R Programming

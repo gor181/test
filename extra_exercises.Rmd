@@ -1,0 +1,36 @@
+---
+title: "extra_exercises"
+output: html_document
+---
+
+--- type:NormalExercise lang:r xp:100 skills:1 key:cf3585e7ba
+## Warm-up: Loan Count Per Year
+
+Find the number of loans issued by year.
+
+*** =instructions
+* Use the `split` function to find the sets of rows for each year.
+* Find the size of the sets in the splits to get the number of loans issued.
+
+*** =hint
+
+*** =pre_exercise_code
+```{r}
+
+```
+
+*** =sample_code
+```{r}
+# Use the split function to find the sets of rows for each year.
+spl = split(1:nrow(x), ___)
+# Find the size of the sets in the splits to get the number of loans issued.
+sapply(___, ___)
+```
+
+*** =solution
+```{r}
+# Use the split function to find the sets of rows for each year.
+spl = split(1:nrow(x), x[,"year"])
+# Find the size of the sets in the splits to get the number of loans issued.
+sapply(spl, length)
+```

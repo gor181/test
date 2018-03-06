@@ -1,4 +1,18 @@
-title: Course Title Here
-description: A description of the course.
-programming_language: python
-from: python-base-prod:20
+title: Scalable Data Processing in R
+description: "Datasets are often larger than available RAM, which causes problems
+  for R programming since by default all the variables are stored in memory. This
+  course introduces tools for processing, exploring, and analyzing data directly from
+  disk. \n\nIn this talk, we'll make use of the Federal Housing Finance Agency's data,
+  a publicly available data set chronicling all mortgages that were held or securitized
+  by both Federal National Mortgage Association (Fannie Mae) and Federal Home Loan
+  Mortgage Corporation (Freddie Mac) from 2009-2015. This data set includes
+  10's of millions of mortgage along with demographics and financial information about
+  the individual lenders. By analyzing these data we may be able to understand the
+  disparity in homeownership among groups from different backgrounds, assess the risk
+  of default, or even detect bubble leading to events like the 2008 housing crash."
+programming_language: r
+from: 'r-base-prod:30'
+datasets:
+  mortgage-sample.csv: Mortgage-sample
+  mortgage-small.csv: Mortgage-small
+  mtest.zip: Mtest

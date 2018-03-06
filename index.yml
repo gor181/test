@@ -1,0 +1,813 @@
+course_title: Working with Big Data in R
+course_description: >-
+  Datasets are often larger than available RAM, which causes problems for R
+  programming since by default all the variables are stored in memory. This
+  course introduces tools for processing, exploring, and analyzing data directly
+  from disk. 
+
+
+  In this talk, we'll make use of the Federal Housing Finance Agency's data, a
+  publicly available data set chronicling all mortgages that were held or
+  securitized by both Federal National Mortgage Association (Fannie Mae) and
+  Federal Home Loan Mortgage Corporation (Freddie Mac) from 2009-2015. This data
+  set include includes 10's of millions of mortgage along with demographics and
+  financial information about the individual lenders. By analyzing these data we
+  may be able to understand the disparity in homeownership among groups from
+  different backgrounds, assess the risk of default, or even detect bubble
+  leading to events like the 2008 housing crash.
+programming_language: r
+chapters:
+  - chapter_title: Working with datasets that don't fit in RAM
+    chapter_description: >-
+      In this video, we cover the reasons you need to apply new techniques when
+      data are larger than available RAM.  We show that importing and exporting
+      data using the base R functions can be slow and some easy ways to remedy
+      this. Finally, we introduce the "split-apply-combine" approach to speed up
+      data processing.
+    exercises:
+      - type: VideoExercise
+        title: What does "Big Data" mean?
+        content: >-
+          RAM stands for Random Access Memory it is where R keeps most variables
+          of the variables it creates. Modern personal computers usually have
+          between 8 and 16 GB of RAM. In this course, we cover the case where
+          you have data sets that require at least most of the RAM on your
+          machine but less than the amount of hard drive space available.
+
+
+          According to the "R Installation and Administration Manual," R is not
+          well-suited for working with data larger than 10-20% of a computer's
+          RAM. The notion of size varies with hardware capability. However, the
+          solutions to computing challenges presented here will scale to the
+          data scientists problem of interest and computing resources.
+
+
+          Why do computing tasks take a long time? Slow execution time can be
+          traced back to a combination of two sources. First is the time needed
+          to read (or write data) to disk - also called IO. Reading and writing
+          from the disk takes much longer than reading data from RAM. Second is
+          the complexity of the computation you want to perform. Summaries, like
+          tables and descriptive statistics, are much are much easier to compute
+          compared to operations like fitting a random forest or LASSO
+          regression. By carefully considering both of these, you'll be able to
+          reduce the effect of these bottlenecks and make better use of the
+          resources you have.
+      - type: MultipleChoiceExercise
+        title: Why is my code slow?
+        content: |
+          All of the following may contribute to processing time except:
+          How much time your code took to write
+          How complex your analysis is
+          How much data you had to import from the disk
+          (need 1 or 2 more)
+      - type: NormalExercise
+        title: How does processing time vary by data size
+        content: |-
+          sort_times = rep(NA, 20)
+          sort_sizes = seq(10000, 1000000, length.out=length(sort_times))
+          for (i in 1:length(sort_sizes)) {
+            rvec = rnorm(sort_sizes[i])
+            sort_times[i] = system.time(sort(rvec))['elapsed']
+          }
+          plot(sort_sizes, sort_times)
+      - type: NormalExercise
+        title: How does processing time vary by data size (2)
+        content: |-
+          multiply_times = rep(NA, 20)
+          num_rows = round(seq(10, 1000, length.out=length(multiply_times)))
+          for (i in 1:length(num_rows)) {
+            mat = matrix(rnorm(num_rows[i]^2), nrow=num_rows[i])
+            multiply_times[i] = system.time( mat %*% mat )['elapsed']
+          }
+          plot(num_rows, multiply_times)
+      - type: VideoExercise
+        title: Working with "Out-of-Core" Objects using the Bigmemory Project
+        content: >+
+          As mentioned before, R objects are kept in RAM. This is much faster
+          than using the disk but there is less RAM than disk. When you run out
+          of RAM your machine may start moving things to disk to make space.
+          Your programs may keep running but they will become slow. In most
+          cases, you are better off moving data to RAM only when it is necessary
+          for processing. This is sometimes called "out-of-core" computing and
+          it's the strategy we're going to use to process data.
+
+
+          For data sets that are at least 20% of the size of RAM and are also
+          represented by dense matrices - matrices where most of the values are
+          not zero - you should consider using a big.matrix, which is
+          implemented in the bigmemory package. By default, a big.matrix keeps
+          data on the disk and only moves it to RAM when it is needed. Data will
+          stay there until space is needed. As a result, it won't bog down your
+          machine like when you run out of RAM.
+
+
+          Another advantage of using a big.matrix is that, since it is stored on
+          disk, it only needs to be imported once. You read in a big.matrix,
+          similar to reading a data frame. However, doing this creates a
+          "backing" file that holds the data in binary format along with a
+          "descriptor" file that tells R how to load it. In a subsequent
+          session, you simply point R at these two files and they are instantly
+          available, without having to go through the import process again.
+
+
+          A final advantage to using a big.matrix is that if you know how to use
+          R's matrices, then you know how to use a big.matrix. A big.matrix is
+          designed to look and feel like a regular matrix. You subset columns
+          and rows just as you would a regular matrix and the object returned is
+          an R matrix. Likewise, assignments are the same as with R matrices and
+          after those assignments are made they are stored on disk and can be
+          used in the current and future R session.
+
+      - type: NormalExercise
+        title: Reading a big.matrix object
+        content: >-
+          # 1. Load the bigmemory library. 
+
+          # 2. Create a new big.matrix by reading in the mortgage.csv file,
+          which does contain a header. 
+
+          #     Name the binary descriptor file "mortgage.bin" and the
+          descriptor file "mortgage.desc".
+
+          library(bigmemory)
+
+
+          x = read.big.matrix("mortgage.csv", header=TRUE, type="integer",
+                              backingfile="mortgage.bin", descriptorFile="morgage.desc"))
+      - type: NormalExercise
+        title: Attaching a big.matrix vs. reading a file benchmark
+        content: >-
+          # Create a new variable y that also points to the mortgage data by 
+
+          # attaching to the "mortgage.desc" file you created in the last
+          exercise.
+
+
+          x = attach.big.matrix("mortgage.desc")
+      - type: NormalExercise
+        title: Data summary using bigsummary
+        content: >
+          # Load the biganalytics library and call summary on the big.matrix
+          object
+
+          library(biganalytics)
+
+          summary(y)
+      - type: NormalExercise
+        title: Indexing a big.matrix object
+        content: >-
+          Attach a big.matrix and subset using the different types of indexing
+          (logical, integer, rownames, colnames, etc)
+      - type: VideoExercise
+        title: References vs. Copies
+        content: >-
+          The one big difference to note is that a big.matrix object is not
+          copied like a regular matrix. When regular R variables are assigned to
+          other variables they actually get a copy of that variable. That's why
+          variables are not changed when then are sent to a function. The
+          function actually receives a copy. 
+
+
+          However, there are other types of variables, like environments, that
+          are not copied when they are passed to a function or copied. For these
+          types it's the actual data structure and, as a result, if you change
+          their values inside a function, you will see those changes after the
+          function is finished executing. 
+
+
+          A big.matrix is a reference object. This ensures that R won't make
+          copies of the matrix without you knowing. This helps minimize memory
+          usage and execution time but it also means you need to be careful when
+          you are making changes.
+      - type: NormalExercise
+        title: Copying matrices and big matrices
+        content: A deepcopy example with a  big.matrix object
+  - chapter_title: Processing and Analyzing Data with bigmemory
+    chapter_description: >-
+      Now that you've got some experience using bigmemory, we're going to go
+      through some simple data exploration and analysis with it. In particular,
+      we'll see how to create tables, visualize data, and fit a random forests
+      model with big.matrix objects.
+    exercises:
+      - type: VideoExercise
+        title: The Bigmemory Suite of Package
+        content: >-
+          There is a suite of packages that make use of bigmemory for processing
+          and big.matrix objects. These include biganalytics for summarizing,
+          bigtabulate for splitting and tabulating, bigalgebra for linear
+          algebra operation. Other contributed package fit models with
+          big.matrix object. These include bigpca for principle components,
+          bigFastLM for linear models, biglasso for penalized linear and
+          logistic regression, and bigrf for random forests.
+      - type: NormalExercise
+        title: Tabulating using bigtable
+        content: >
+          The bigtabulate package provides optimized routines for creating
+          tables and splitting the rows of big.matrix objects. Let's say we
+          wanted to see the breakdown by ethnicity of mortgages in the housing
+          data. The documentation from the website provides the mapping from the
+          numerical value to ethnicity. We could therefore, create a table using
+          the bigtable function, found in the bigtabulate package, like this:
+
+
+          library(bigtabulate)
+
+          race_table = bigtable(x, "borrower_race")
+
+          race_cat = c("Native Am", "Asian", "Black", "Pacific Is", "White",
+            "Two or More", "Hispanic", "Not Avail")
+          names(race_table) = race_cat
+
+          race_table
+      - type: NormalExercise
+        title: Visualizing the table
+        content: >
+          The return type of these functions are base R types that can be used
+          just like you would with any analysis. This means that we can
+          visualize results, just like we would the results from any table.
+          Suppose we want to see the total count by year, rather than for all
+          years at once. Then we would create a table for each ethnicity for
+          each year and then plot the results. We would create the table like
+          this:
+
+
+          race_year_table = bigtable(x, c("borrower_race", "year"))
+
+          rownames(race_year_table) = race_cat
+
+
+          Then we can visualize the data set by turning the race_year_table
+          matrix into a data.frame, add a new column giving the ethnicity
+          information, transforming into the long format using tidyr, and the
+          creating a plot using ggplot2.
+
+
+          library(tidyr)
+
+          library(ggplot2)
+
+
+          rydf = as.data.frame(race_year_table)
+
+          rydf$Race = rownames(rydf)
+
+          rydfl = gather(rydf, Year, Count, -Race)
+
+
+          ggplot(rydfl, aes(x=Year, y=Count, group=Race, color=Race)) +
+          geom_line()
+      - type: VideoExercise
+        title: Split-apply-combine with bigmemory
+        content: >
+          In the last example the bigtable function counted how many times an
+          ethnic group appeared for each year. What if we wanted another type of
+          summary? In particular, what if we want to know the proportion of
+          females in urban and rural areas by year? We could use bigtable again
+          but then we would need to pick out the counts we are interested in and
+          normalize by the total number of borrowers per year. This approach is
+          fine but dealing with tables can get tricky, especially as you split
+          on more variables. Furthermore, this approach doesn't work if you want
+          to perform summaries - like getting the mean, standard deviation, or
+          median - on continuous measurements. 
+
+
+          An alternative approach is to split the data up by year, thinking of
+          each year as a different data set. For each of those years we'll get
+          the number of female borrowers and divide by the total number of
+          mortgages for that year. You'll find when you can partition the data
+          into non-overlapping groups, you are better off finding the partition
+          first. We are going to use the split function which is available in
+          base R. The split function takes the values that will be divided into
+          groups, in our case the row index, along with the thing to be split,
+          in our case the year. The result is a named list where names
+          correspond to the unique split values - the year - and the each
+          element is a vector of rows corresponding to that year. We can then
+          find the proportion of females in urban and rural areas.
+
+
+          spl = split(1:nrow(x), x[,"year"])
+
+          prop_female = Reduce(rbind,
+            Map(function(inds) {
+              xy = x[inds,]
+              prop_female_urban = sum(xy[,"borrower_gender"] == 2 & xy[,"msa"] == 1) / 
+                sum(xy[,"msa"] == 1)
+              prop_female_rural = sum(xy[,"borrower_gender"] == 2 & xy[,"msa"] == 0) / 
+                sum(xy[,"msa"] == 0)
+              c(prop_female_urban, prop_female_rural)
+            }, spl))
+          dimnames(prop_female) = list(names(spl), 
+            c("prop_female_urban", "prop_femal_rural"))
+          prop_female
+      - type: NormalExercise
+        title: Fitting a big random forest
+        content: >
+          Now that we've done some exploratory analysis, let's try fitting some
+          models. In particular, we want to get a better handle on which of the
+          variables in the data set are associated with borrower gender. The
+          documentation has five different categories for gender: Male, Female,
+          Information Not Provided, Not Applicable, and Missing. Some of reasons
+          we may want to model this variable are:
+
+          - We may want to see if the missing variables are MCAR, MAR, not MNAR.
+
+          - We may want to see which demographic variables are associated with
+          female vs male mortgage borrowing.
+
+
+          We are going to fit a random forest model, predicting borrower_gender
+          from the other variables using the bigrf package, written by Aloysius
+          Lim. We are going to use the bigrfc function to fit a classification
+          model. The function takes as arguments a big.matrix object, a vector
+          of response variables, which of the columns in the big.matrix are
+          categorical, and for each of those factor variables the number of
+          categories. This means that we'll need to precompute the number of
+          factor levels first.
+
+
+          library(bigrf)
+
+          num_levels = Reduce(c, Map(function(j) length(unique(x[,j])),
+          1:ncol(x)))
+
+          fit = bigrfc(x, x[,"borrower_gender"],
+          varselect=(1:ncol(x))[-c(2,11)],  
+            varnlevels=num_levels[-c(2, 11)])
+      - type: NormalExercise
+        title: Interpret slope coefficients with a given penalty parameter
+        content: Fit the model say what a set of slope coefficients mean
+      - type: NormalExercise
+        title: Fit a bigrandom forest
+        content: A bigrf example with bigmemory
+      - type: VideoExercise
+        title: Limitations of bigmemory
+        content: >-
+          Can only run analyses for which special methods have been written.
+          Data type is limited to dense numeric matrices.
+      - type: MultipleChoiceExercise
+        title: Where should you use bigmemory?
+        content: |
+          You have sparse matrices
+          You have matrices that are 10% the size of your total RAM
+      - type: NormalExercise
+        title: Where shouldn't you use bigmemory?
+        content: >-
+          The bigmemory package is useful when your data can are represented as
+          a dense, numeric matrix and you can store an entire data set on your
+          hard drive. It is also compatible with optimized, low-level linear
+          algebra libraries written in C, like Intel's Math Kernel Library. So,
+          you can use bigmemory directly in your C and C++ programs for better
+          performance.
+
+
+          If your data isn't numeric - if you have string variables - or if you
+          need a greater range of numeric types - like 8-bit integers-  then you
+          might consider trying the ff package. It is similar to bigmemory but
+          includes a structure similar to a data.frame.
+  - chapter_title: Working with iotools
+    chapter_description: >
+      bigmemory provides a matrix that moves data to the disk when it's not in
+      use. This saves time and space. But bigmemory can get bogged down when it
+      needs all of the elements of large matrix. Also, as mentioned before, it
+      only works with numeric data. In this chapter we'll use the iotools
+      package to process numeric and string data in individual chunks that will
+      be recombined to provide analyses of data.
+    exercises:
+      - type: VideoExercise
+        title: iotools Overview
+        content: >-
+          We often access data in a very regular way. For example, when finding
+          the mean of a vector we can perform intermediate calculations on
+          portions of the data and put them together to get the calculation
+          we're after. This is a special case of split-apply-combine. Our split
+          is on contiguous chunks of data, our apply is the sum of the vector
+          chunk and length of the vector chunk, and our combine is a sum of
+          vector chunks divided by a sum of vector lengths.
+
+
+          This approach is important for two reasons. First, the amount of data
+          used by each apply function is small. We can read a small chunk,
+          process it, and move onto the next chunk. We don't need all of the
+          data to be read into RAM. Second, the calculation on one chunk of data
+          is completely independent of the calculation on any other chunk. This
+          means that we are guaranteed that these calculations can be
+          parallelized and made to run faster.
+      - type: MultipleChoiceExercise
+        title: Can I split-apply-combine it?
+        content: >-
+          Which of the following cannot be performed in a single
+          split-apply-combine step?
+
+          The maximum value of a vector
+
+          The minimum value of a vector
+
+          The mean of a vector
+
+          The median of a vector
+      - type: NormalExercise
+        title: Split-Apply-Combine Coding Exercise
+        content: Split on the iris data species to get the average Sepal.Length.
+      - type: VideoExercise
+        title: 'A first look at iotools: Importing data'
+        content: >-
+          The iotools package lets you quickly read data from disk. In the next
+          section, we'll show how to read a part of a file, process it, and
+          combine the results. But we'll start with reading data in as you would
+          using the read.csv or read.table functions.
+
+
+          The iotools package includes the read.csv.raw and read.delim.raw
+          functions for reading comma separated value files and files with other
+          field delimiters. They options available for these functions are
+          similar to those of read.csv and read.delim but they are much faster.
+      - type: NormalExercise
+        title: Compare read times of read.delim and read.delim.raw
+        content: |
+          microbenchmark(
+            read.delim("national-file-a/fhlmc_sf2015a_loans.txt", header=FALSE, sep=" "),
+            times=5)
+
+          microbenchmark(
+            read.delim.raw("national-file-a/fhlmc_sf2015a_loans.txt", header=FALSE, 
+                                         sep=" "),
+            times=5)
+      - type: NormalExercise
+        title: Reading file pieces
+        content: >-
+          By default R lets you read in files in chunks with the nrows and skip
+          options in read.delim and other similar read functions. For example,
+          we can read rows 1 through 10 then rows 11 through 20 into a
+          data.frames with the following command:
+
+
+          nfa1 = read.delim("national-file-a/fhlmc_sf2015a_loans.txt",
+          header=FALSE, nrow=10)
+
+          nfa2 = read.delim("national-file-a/fhlmc_sf2015a_loans.txt",
+          header=FALSE, skip=9, nrow=10)
+
+
+          This could be put into a loop that reads in a chunk at a time
+          processes it and stores the intermediate results. While this approach
+          only uses a small amount of memory, it has two problems. First, it's
+          not particularly fast. We'd like to read from the disk and process the
+          intermediate results as quickly as possible. Second, the code is
+          cumbersome. We need to either specify which lines to read (as in this
+          example) which can be difficult if we haven't precomputed the number
+          of lines, or we need to use a connection and specify how many bytes to
+          read which requires tuning to run quickly
+      - type: NormalExercise
+        title: Processing the file in chunks using chunk.apply
+        content: >
+          The iotools package's chunk.apply function addresses the shortcomings
+          described in the previous section by providing an apply function for
+          rows of a file. You specify the file or connection to read from, the
+          function to apply to each of the chunks, and a how the values should
+          be aggregated. Let's look at an example of getting the total number of
+          mortgages issued under filing A for 2015.
+
+
+          col_names = c('enterprise', 'record_number', 'is_metro',
+          'perc_minority',
+            'tract_income_ratio', 'borrower_income_ratio', 'ltv', 'loan_purpose',
+            'federal_guarantee', 'borrower_race', 'co_borrower_race', 'borrower_gender',
+            'co_borrower_gender', 'num_units', 'affordability')
+
+          p = pipe('cat national-file-a/fhlmc_sf2015a_loans.txt | tr -s " "
+          "|"')
+
+          open(p)
+
+          msa_tables = chunk.apply(p,
+            function(chunk) {
+              m = mstrsplit(chunk, type="integer")
+              colnames(m) = col_names[-16]
+              table(m[,"is_metro"])
+            })
+          close(p)
+
+
+          In this example, we clean up the fhlmc_sf2015a_loans.txt file by
+          removing some of the white space and send the resulting pipe to the
+          chunk.apply function. The function takes the chunk, turns it into a
+          matrix using the mstrsplit function, adds column names, and finally
+          creates a table of the counts for msa.
+      - type: NormalExercise
+        title: Reducing the result of chunk.apply
+        content: >
+          The chunk.apply function returns msa_tables, a matrix where the first
+          row corresponds to the result from the first chunk. This row has two
+          elements telling us how many non-urban and urban mortgages there were
+          respectively. To get the total number of urban and non-urban mortgages
+          we take the column sums of the msa_tables matrix.
+
+
+          colSums(msa_tables)
+
+
+          By default, chunk.apply aggregates chunked calculations using the
+          rbind function. This will work when the function you write returns
+          objects like vectors, matrices, and data frames. If you want to return
+          objects of different sizes then you can change how the processed
+          chunks are collected with the CH.MERGE option. For example, you could
+          supply CH.MERGE=list. You can even use this option to aggregate the
+          processed chunks.
+      - type: VideoExercise
+        title: Data frames and parallelization
+        content: 'Reading in data.frames, parallelizing code.'
+      - type: NormalExercise
+        title: Reading chunks in as a data.frame
+        content: >
+          In the previous example, we read each chunk into the processing
+          function as a matrix using the mstrsplit. This is fine when we are
+          reading rectangular data where the type of element in each column is
+          the same. When it's not, we might like to read the data in as a
+          data.frame. This can be done by either reading a chunk in as a matrix
+          and then convert it to a data.frame, or you can use the dstrsplit
+          function. This function takes a chunk, just like mstrsplit, and
+          produces a data frame with column types you specify. Here's how to do
+          this with the msa_tables example
+
+
+          p = pipe('cat national-file-a/fhlmc_sf2015a_loans.txt | tr -s " "
+          "|"')
+
+          open(p)
+
+          msa_tables = chunk.apply(p,
+            function(chunk) {
+              df = dstrsplit(chunk, col_types=rep("integer", 15))
+              colnames(df) = col_names[-16]
+              table(df[,"is_metro"])
+            })
+          close(p)
+      - type: NormalExercise
+        title: Parallelizing Calls to chunk.apply
+        content: >
+          The chunk.apply function also has a parallel option to process data
+          more quickly. When the parallel option is set to a value greater than
+          one on Linux and Unix machine (including the Mac) multiple processes
+          read and process data at the same time thereby reducing the execution
+          time. 
+
+
+          p = pipe('cat national-file-a/fhlmc_sf2015a_loans.txt | tr -s " "
+          "|"')
+
+          open(p)
+
+          msa_tables = chunk.apply(p,
+            function(chunk) {
+              m = mstrsplit(chunk, type="integer")
+              colnames(m) = col_names[-16]
+              table(m[,"is_metro"])
+            }, parallel=2)
+          close(p)
+      - type: NormalExercise
+        title: Remarks
+        content: >-
+          In this chapter we covered how to use the iotools package for
+          processing data out-of-core in chunks. The package is appropriate when
+          the file you want to process is large compared to the amount of RAM on
+          your computer. Files are processed by calling the chunk.apply function
+          on a file or connection, which read file chunks in for processing. You
+          also supply a processing function that takes a chunk, which can be
+          converted to either a matrix or data.frame using mstrsplit or
+          dstrsplit, and the chunk is processed based on the operation you're
+          interested.
+
+
+          The iotools package is the basis for the hmr package, which allows you
+          to process data on the Apache Hadoop infrastructure. These packages
+          are used at places like AT&T labs research, where it is routinely used
+          to process petabytes of data.
+  - chapter_title: 'Case Study: A Preliminary Analysis of the Housing Data'
+    chapter_description: >-
+      In the previous chapters, we've introduced the housing data and we've
+      shown how to compute with data that is about as big, or bigger than, the
+      amount of RAM on a single machine. In this chapter, we'll go through a
+      preliminary analysis of the data, comparing trends over time.
+    exercises:
+      - type: VideoExercise
+        title: Overview of types of analysis for this chapter
+        content: >-
+          The data that we've been looking at are counts of categorical
+          variables. For the rest of this chapter, we're going to see how these
+          counts change over time. We'll do a preliminary analysis on the
+          housing data and use bigmemory to explore the following questions:
+
+
+          1. Are the data missing at random?
+
+          2. How do borrowing trends differ in urban vs. rural areas?
+
+          3. Where are people buying houses?
+
+          4. Which groups of people take on the most debt?
+
+          5. Can we detect indicators of upward mobility?
+
+
+          Then, we'll use iotools to answer a few more questions including:
+
+
+          1. How is diversity changing in borrower neighborhoods?
+
+          2. Which groups of people receive fewer Federal Housing guaranteed
+          mortgages?
+
+          3.  Who is co-borrowing?
+      - type: NormalExercise
+        title: Adjusting for Demographic Size
+        content: In the Use CIA factbook to get demographic proportions.
+      - type: NormalExercise
+        title: Adjusted Demographic Trends in Borrower Lending
+        content: >
+          In the previous chapters we showed that there are more people who
+          identify themselves as white who are also getting mortgages. This
+          should not be surprising since the white demographic makes up
+          approximately 80% of the US population. A better analysis may look at
+          which group receives more mortgages after adjusting for the group
+          size. To do this we'll need the total proportion for each group.
+          According to the United States Census Bureau, here is the racial
+          breakdown:
+
+
+          American Indian or Alaska Native 0.9
+
+          Asian 4.8
+
+          Black or African American 12.6
+
+          Native Hawaiian or Other Pacific Islander 0.2
+
+          White 72.4
+
+          Two or more races 2.9
+
+
+          These percentages do not add up to 100. Futhermore, it should also be
+          noted that a person can either identify race or identify as having
+          "Hispanic or Latino ethnicity." This group makes up 16.3 % of the
+          total population.
+      - type: VideoExercise
+        title: Are the data missing at Random?
+        content: >-
+          Along with the overlapping racial and ethnic demographic categories,
+          we also have missing data. This issue is pervasive and can be
+          difficult to deal with properly when you create a model. Generally
+          speaking, missing data falls into one of three categories: missing
+          completely at random, missing at random, and missing not at random.  A
+          full analysis of missing housing data and strategies for dealing with
+          them are beyond the scope of this course. We are going to do a quick
+          check to see if it is plausible that the data are missing completely
+          at random and then drop the missing values.
+      - type: NormalExercise
+        title: 'Looking for Predictable Missingness with biglasso '
+        content: >-
+          If data are missing completely at random, then I shouldn't be able to
+          predict when a variable is missing based on the rest of the data I
+          have. Therefore, if I can predict missingness then the data are not
+          missing completely at random. So, let's use the biglasso package to
+          predict missingness. If we don't find any structure in the missing
+          data it does not mean that we have proven the data are missing at
+          random, but it does make it seem more plausible.
+      - type: NormalExercise
+        title: Fitting the biglasso
+        content: >-
+          library(biglasso)
+
+          y = as.numeric(x[,"borrower_race"] == 9)
+
+          x_no_race = deepcopy(x, cols=(1:ncol(x))[-9], backingfile="")
+
+          big_fit = cv.biglasso(x_no_race, y, family="binomial")
+
+          plot(cvfit, type="cve")
+
+
+          The code above uses the cross-validated version of the lasso to
+          regress all of the variables in the housing data onto the borrower
+          race. The code creates a new variable, y, that holds a binary vector
+          indicating if the value is missing. Then, a new big.matrix is created
+          that does not include race variable. Note that we set the backingfile
+          option to "" to create a temporary big.matrix object that will be
+          deleted when the x_no_race variable is no longer needed. After these
+          new data sets have been created we fit the model and examine the
+          cross-validated error. The plot tells us the regressor variables do
+          not do a good job predicting missingness.
+
+
+          For the rest of this talk we'll assume that the data are missing
+          completely at random. This means that we can safely ignore them.
+          However, a publishable result may require further investigation.
+      - type: VideoExercise
+        title: Analyzing the Housing Data
+        content: >
+          In previous exercises, we talked about how to make fair comparisons
+          between different demographic groups in the data, and created a
+          preliminary analysis to see if there is structured missingness in the
+          data that might bias subsequent analyses.
+
+
+          Now we are going to answer questions about the data including
+
+          1. What do the adjusted demographic borrowing trends look like?
+
+          2. How are borrowing trends different in city vs. rural areas?
+
+          3. Where are people buying?
+
+          4. Which demographic groups take on more debt?
+      - type: NormalExercise
+        title: The Adjusted Demographic Trends
+        content: >-
+          To compare changes in borrowing across demographics, take the counts
+          and divide by the proportions. Then plot them, just as we did before.
+
+
+          prop = c(0.009, 0.048, 0.126, 0.002, 0.72, 0.029, 0.163, 0)
+
+          names(prop) = race_cat
+
+          rydfl$`Adjusted Count` = rydfl$Count / prop[rydfl$Race]
+
+
+          ggplot(rydfl, aes(x=Year, y=`Adjusted Count`, group=Race, color=Race))
+          + 
+            geom_line()
+
+          Before, the number of white borrowers overwhelmed any other
+          information we might be able to glean in the borrowing trends. After
+          adjusting we can see that people identifying as Asian, Pacific
+          Islander, and White are borrowing at a much higher rate compared to
+          other groups.
+      - type: VideoExercise
+        title: 'Borrower Lending Trends: City vs. Rural'
+        content: >-
+          In the last exercise, we compared the adjusted number of borrowers in
+          each demographic group. What if instead, we wanted to see the change
+          in lending over time in city vs. rural areas for each demographic
+          group. Whereas before we normalized by demographic proportion, in this
+          case, we might want to normalize by the demographic size.
+      - type: NormalExercise
+        title: City vs. Rural Demographic Trend
+        content: >-
+          spl = split(1:nrow(x), paste(x[,"year"], x[,"borrower_race"])) 
+
+          prop_msa = Reduce(c,
+            Map(function(inds) {
+              sum(x[inds, "msa"]==1) / length(inds)
+            }, spl))
+          yr = matrix(unlist(strsplit(names(spl), " ")), ncol=2, byrow=TRUE)
+
+          borrower_race = race_cat[as.numeric(yr[,2])]
+
+          year = as.numeric(yr[,1])df = data.frame(list(Prop_MSA=prop_msa,
+          Race=borrower_race, Year=year))
+
+
+          ggplot(df, aes(x=Year, y=Prop_MSA, group=Race, color=Race)) +
+          geom_line()
+
+
+          This code splits the data in year and race. For each of those
+          combinations, it finds the proportion of urban dwellers using the Map
+          and Reduce functions. After that, we only need to assemble the data
+          and plot it.
+
+
+          The plot shows an increase in the proportion of people borrowing for
+          each demographic group. Members of Asian, Black, and Hispanic groups
+          have the highest proportion of urban mortgages. Whites and Native
+          Americans have the least.
+      - type: NormalExercise
+        title: Who is securing federally guaranteed loans?
+        content: >-
+          A federally guaranteed loan protects the company issuing a loan if the
+          lender defaults. That is, if someone gets a loan, and is no longer
+          able repay they loan, then the government buys the loan and the person
+          who took out the loan is responsible to the government for paying it
+          back.
+
+
+          We would expect that these types of loans are issued to people with
+          less money because they mitigate risk for lending companies. If I'm a
+          lender and I can issue a federally guaranteed loan, then I'm less
+          worried about the lender defaulting since the government will buy the
+          loan from me.
+
+
+          Borrower's income is not in the data set. However, their annual income
+          divided by the median income of people in the local area is. This is
+          called the Income Ratio. Let's look at the proportion of federally
+          guaranteed loans for each borrower income category.
+      - type: NormalExercise
+        title: Federal Guarantee and Income Ratio
+        content: >-
+          The "Federal Guarantee" field is a categorical variable with five
+          distinct categories. The only category that does not denote a
+          federally guaranteed mortgage is category four. Let's look at the
+          proportion of federally guaranteed loans for each of the borrower
+          income ratios.
